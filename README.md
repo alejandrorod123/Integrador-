@@ -1,6 +1,6 @@
 #  Informe del Laboratorio Integrador
 
-**Alumno:** Tiziano Pirez
+**Alumno:** Elias Alejandro Rod 
 **Curso:** 5º 4ª
 **Fecha:** 27/10/2025
 **Sistema Operativo:** Ubuntu Linux en maquina virtual 
