@@ -1,162 +1,142 @@
-#  Informe del Laboratorio Integrador
+# Informe del Laboratorio Integrador
 
-**Alumno:** Tiziano Pirez
-**Curso:** 5º 4ª
-**Fecha:** 27/10/2025
-**Sistema Operativo:** Ubuntu Linux en maquina virtual 
-
-## Usuarios
-
-**Usuarios nuevos creados:**
-
-| Usuario      | Home               | Shell               | Estado    |
-| ------------ | ------------------ | ------------------- | --------- |
-| `alumno1` | `/home/alumno1` | `/bin/bash`         | Activo    |
-| `sinhome`    | *sin home*         | `/usr/sbin/nologin` | Bloqueado |
-| `backup`     | `/home/backup`     | `/bin/bash`         | Activo    |
-
- **Análisis:**
-
-* El usuario `alumno1` fue creado para pruebas con su directorio `/home/alumno1` y shell interactivo.
-* El usuario `sinhome` no tiene home ni acceso a la terminal (`nologin`), por lo que está bloqueado.
-* `backup` parece ser un usuario de mantenimiento o copia, también con acceso bash.
-* Se detectaron nuevas líneas en `/etc/passwd` y `/etc/shadow` con estos usuarios.
+**Alumno:** Elias Alejandro Rod y Tiziano Yamil Pirez 
+**Curso:** 5° 4°  
+**Fecha:** 27/10/2025  
+**SO usado:** Ubuntu Linux (VM)
 
 ---
 
-## Archivos y permisos
+## 1. Usuarios creados
 
-**Archivos inspeccionados en `/opt/lab_exercise`:**
+El script agrega tres usuarios nuevos al sistema:
 
-| Archivo                           | Propietario             | Permisos             | Observación                      |
-| --------------------------------- | ----------------------- | -------------------- | -------------------------------- |
-| `/opt/lab_exercise/secret.txt`    | `root:root`             | `600`                | Solo root puede leerlo           |
-| `/opt/lab_exercise/public.txt`    | `alumno_lab:alumno_lab` | `777`                | Demasiado abierto (riesgo)       |
-| `/opt/lab_exercise/important.cfg` | `root:root`             | `644` + atributo `i` | Inmutable (no puede modificarse) |
+| Usuario        | Home              | Shell       | Estado            |
+|----------------|-------------------|-------------|-------------------|
+| `alumno1`      | /home/alumno1     | /bin/bash   | Activo            |
+| `alumno2`      | /home/alumno2     | /bin/bash   | Bloqueado         |
+| `nohome_user`  | *(sin home)*      | /bin/bash   | Activo            |
 
- **Análisis:**
-
-* Se cambió el propietario de algunos archivos a `root`, posiblemente por error.
-* `public.txt` con permiso `777` es un riesgo, ya que cualquier usuario puede modificarlo o borrar información.
-* `important.cfg` tiene el atributo `immutable`, por lo que no puede editarse ni eliminarse hasta quitarle el flag (`sudo chattr -i`).
-
----
-
-##  Cron jobs
-
-**Cron detectado:** `/etc/cron.d/lab_exercise`
-
-```
-*/5 * * * * root /usr/local/bin/trampa
-```
-
- **Análisis:**
-
-* Se ejecuta cada 5 minutos como **root**, llamando al script `/usr/local/bin/trampa`.
-* Este cron deja rastros en `/var/log/lab_cron.log`.
-* Riesgo: cualquier modificación en `/usr/local/bin/trampa` podría ejecutarse con permisos administrativos.
+### Comentario
+- `alumno1` viene con un archivo de bienvenida.  
+- `alumno2` existe pero se bloquea la contraseña ni bien se crea.  
+- `nohome_user` se crea sin carpeta personal (`-M`).  
+- Todos quedan registrados en `/etc/passwd` como corresponde.
 
 ---
 
-##  Configuración del sistema
+## 2. Archivos y permisos en `/opt/lab_exercise`
 
-**Archivo:** `/etc/hosts`
+Durante la ejecución del script aparecen varios archivos:
 
-Antes:
+| Archivo/Dir                  | Propietario   | Permisos | Nota rápida |
+|------------------------------|---------------|----------|-------------|
+| `root_only.txt`              | root:root     | 600      | Solo root lo ve. |
+| `tmp_public/`                | root:root     | 1777     | Carpeta pública tipo `/tmp`. |
+| `tmp_public/readme.txt`      | root:root     | 644      | Archivo común. |
+| `owner_mismatch.txt`         | root:alumno1  | 640      | Propietario raro a propósito. |
+| `broken_link`                | —             | —        | Enlace roto. |
+| `link_to_mismatch`           | —             | —        | Apunta al archivo anterior. |
+| `immutable_note.txt`         | root:root     | 644 + i | Marcado como inmutable. |
 
-```
-127.0.0.1   localhost
-```
-
-Después del script:
-
-```
-127.0.0.1   localhost
-127.0.0.1   www.google.com  # LAB_EXERCISE_ENTRY
-192.168.56.10 internal.lab.local
-```
-
- **Análisis:**
-
-* El script redirige `www.google.com` a `127.0.0.1`, bloqueando el acceso real al sitio.
-* También agrega un dominio local `internal.lab.local`.
-* Esto podría usarse para simular entornos internos o, en casos maliciosos, para redirigir tráfico de usuarios.
+### Comentario
+- El directorio `tmp_public` está abierto para todos pero con sticky bit.  
+- `owner_mismatch.txt` probablemente es para practicar detección de problemas de permisos.  
+- El archivo `immutable_note.txt` tiene el flag `i` y no se puede editar ni borrar hasta usar `chattr -i`.
 
 ---
 
-##  Atributos especiales
+## 3. Cron configurado
 
-**Archivo con atributo `immutable`:**
+**Se crea el archivo:**
+'/etc/cron.d/lab_exercise'
 
-```
-/opt/lab_exercise/important.cfg
-```
+Con el contenido:
 
-**Comando:**
+Con el contenido:
 
+	•		•		•		•		•	root echo “cron_mark: $(date -Iseconds)” >> /var/tmp/lab_cron_marker.txt
+
+### Comentario
+- Corre **una vez por minuto**.  
+- Solo escribe una marca de tiempo.  
+- No ejecuta scripts externos, así que es seguro.
+
+---
+
+## 4. Cambios en `/etc/hosts`
+
+El script agrega:
+
+LAB_EXERCISE_ENTRIES
+
+127.0.0.1    servicio-interno.local
+192.0.2.123  servicio-falso.example
+
+LAB_EXERCISE_ENTRIES
+
+### Comentario
+- No borra lo que ya estaba, solo suma estas líneas.  
+- Son dominios falsos para pruebas de redirección.
+
+---
+
+## 5. Atributos especiales
+
+Archivo afectado:
+
+/opt/lab_exercise/immutable_note.txt
+
+Con atributo:
+
+––i–––– immutable_note.txt
+
+### Comentario
+- El `i` significa **inmutable**: no se puede editar, mover ni borrar.  
+- Para revertirlo:  
+
+sudo chattr -i immutable_note.txt
+
+---
+
+Aquí tienes el archivo completo en formato Markdown listo para copiar y pegar, sin texto extra.
+
+⸻
+
+
+## 6. Script “trampa”
+
+**Contenido:**
+
+`/usr/local/bin/trampa`
+
+**Contenido:**
 ```bash
-lsattr /opt/lab_exercise/important.cfg
+#!/usr/bin/env bash
+echo "Pista: revisa permisos y cron." > /tmp/pista_trampa.txt
+exit 0
 ```
 
-Salida:
+**Comentario**
+- Solo escribe una pista dentro de /tmp.
+- No tiene relación con el cron.
+- Permisos 755, cualquiera lo puede ejecutar.
 
-```
-----i-------- /opt/lab_exercise/important.cfg
-```
+***
 
- **Análisis:**
+## 7. Conclusiones
+- El script agrega usuarios, archivos y un cron básico sin mucho riesgo.
+- La parte más sensible es el cambio en /etc/hosts, que puede confundir resoluciones DNS.
+- El atributo immutable es útil pero puede trabar tareas si se aplica sin querer.
+- Buen ejercicio para entender permisos, enlaces simbólicos y cron jobs.
 
-* El atributo `i` impide modificar, borrar o mover el archivo.
-* Si se intenta editar o eliminar, el sistema devuelve:
-  `rm: cannot remove 'important.cfg': Operation not permitted`
-* Para revertirlo: `sudo chattr -i /opt/lab_exercise/important.cfg`
+***
 
----
+## 8. Estado final del sistema
 
-##  Archivos de sistema
-
-**Archivo:** `/usr/local/bin/trampa`
-
-**Contenido principal:**
-
-```bash
-#!/bin/bash
-# Script de prueba creado por lab_changes.sh
-echo "$(date) - Cron ejecutado correctamente" >> /var/log/lab_cron.log
-touch /tmp/lab_marker.txt
-```
-
- **Análisis:**
-
-* El script se ejecuta periódicamente por el cron (cada 5 min).
-* Registra fecha/hora en `/var/log/lab_cron.log` y crea un marcador en `/tmp/lab_marker.txt`.
-* Si se modifica este archivo, cualquier comando dentro podría ejecutarse como root por el cron.
-  ➡️ **Riesgo alto de seguridad.**
-
----
-
-## Conclusiones y recomendaciones
-
-**Impacto en un sistema posta:**
-
-* Creación de usuarios innecesarios puede abrir puertas a accesos indebidos.
-* Archivos con permisos 777 permiten escritura a cualquiera.
-* Cron jobs como root ejecutando scripts modificables son una grave vulnerabilidad.
-* Cambios en `/etc/hosts` pueden alterar o bloquear sitios.
-* Atributos `immutable` dificultan mantenimiento o eliminación de archivos.
-
-**Medidas preventivas :**
-
-* Auditar periódicamente `/etc/passwd`, `/etc/group` y `/etc/cron.*`.
-* Usar `lsattr` para detectar atributos inusuales en archivos del sistema.
-* Monitorear cambios con `auditd` o `inotify`.
-* Evitar que scripts sean ejecutables por root si no son necesarios.
-* Mantener copias de seguridad y snapshots antes de ejecutar scripts de administración.
-* Controlar permisos (ningún archivo debería quedar con `777`).
-
----
-
- **Estado final:**
-Se ejecutó `sudo bash lab_cleanup.sh` para revertir los cambios.
-Verificado: usuarios eliminados, cron borrado, `/etc/hosts` restaurado, archivos limpiados.
-Logs confirmados en `/var/log/lab_changes.log`.
+Después de ejecutar `lab_cleanup.sh`:
+- Usuarios → eliminados.
+- Cron → borrado.
+- `/etc/hosts` → restaurado.
+- Carpeta `/opt/lab_exercise` → eliminada.
+- Todo confirmado en `/var/log/lab_changes.log`.
