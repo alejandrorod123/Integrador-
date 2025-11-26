@@ -1,6 +1,6 @@
 #  Informe del Laboratorio Integrador
 
-**Alumno:** Elias Alejandro Rod 
+**Alumno:** Tiziano Pirez
 **Curso:** 5º 4ª
 **Fecha:** 27/10/2025
 **Sistema Operativo:** Ubuntu Linux en maquina virtual 
@@ -11,13 +11,13 @@
 
 | Usuario      | Home               | Shell               | Estado    |
 | ------------ | ------------------ | ------------------- | --------- |
-| `alumno_lab` | `/home/alumno_lab` | `/bin/bash`         | Activo    |
+| `alumno1` | `/home/alumno1` | `/bin/bash`         | Activo    |
 | `sinhome`    | *sin home*         | `/usr/sbin/nologin` | Bloqueado |
 | `backup`     | `/home/backup`     | `/bin/bash`         | Activo    |
 
  **Análisis:**
 
-* El usuario `alumno_lab` fue creado para pruebas con su directorio `/home/alumno_lab` y shell interactivo.
+* El usuario `alumno1` fue creado para pruebas con su directorio `/home/alumno1` y shell interactivo.
 * El usuario `sinhome` no tiene home ni acceso a la terminal (`nologin`), por lo que está bloqueado.
 * `backup` parece ser un usuario de mantenimiento o copia, también con acceso bash.
 * Se detectaron nuevas líneas en `/etc/passwd` y `/etc/shadow` con estos usuarios.
